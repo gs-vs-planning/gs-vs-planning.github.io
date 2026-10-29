@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Execution-consistent dichotomic planning of visual-servoing key images in 3D Gaussian Splatting maps">
+  <meta name="keywords" content="Visual Servoing, Path Planning, 3D Gaussian Splatting, IBVS, 2.5D Visual Servoing, Photometric Visual Servoing">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dichotomic Visual-Servoing Planning in 3DGS</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    .hero-body { padding-bottom: 1rem; }
+    .publication-title { font-family: 'Google Sans', sans-serif; }
+    .publication-authors { font-family: 'Google Sans', sans-serif; }
+    .publication-links .button { margin: 4px; }
+    section.hero.teaser .hero-body { padding-top: 0; }
+    .content figure { margin: 1.5em 0; }
+    .content figure figcaption { font-size: 0.9em; color: #666; margin-top: 0.5em; }
+    .law-photometric { color: #e07b00; } .law-ibvs { color: #7b3294; } .law-25d { color: #1a9850; } .law-fail { color: #d7191c; } .law-pastar { color: #2c7bb6; }
+    .results-table td, .results-table th { text-align: center; white-space: nowrap; }
+    .results-table td:first-child, .results-table td:nth-child(2), .results-table th:first-child, .results-table th:nth-child(2) { text-align: left; }
+    .results-table tr.ours td { font-weight: 600; background: #f3faf5; }
+    .scene-video { width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); background: #000; }
+    .viewer { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; background: #f5f5f5; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .viewer iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .viewer .placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #666; text-align: center; padding: 1rem; }
+    .stat-box { text-align: center; }
+    .stat-box .heading { margin-bottom: 4px; }
+    .stat-box .title { color: #1a9850; }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Execution-Consistent Dichotomic Planning<br>of Visual-Servoing Key Images<br>in 3D Gaussian Splatting Maps</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Anonymous authors</span>
+          </div>
+          <div class="is-size-6 publication-authors" style="color:#888;">
+            <span class="author-block">Under double-anonymous review</span>
+          </div>
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="#" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                  <span>Paper (coming soon)</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span>
+                  <span>Code (coming soon)</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#scenes" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-cube"></i></span>
+                  <span>3D scenes</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Teaser -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <figure class="image">
+        <img src="assets/img/teaser.png" alt="Five planners on one start-goal pair in an InteriorGS house, and the key images of our 2.5D plan">
+      </figure>
+      <h2 class="subtitle has-text-centered" style="margin-top: 1rem;">
+        One start&ndash;goal pair, 3.8&nbsp;m apart. <span class="law-fail">Fixed spacing fails</span>,
+        <span class="law-pastar">P-A*</span> needs 18 waypoints, our dichotomic planner needs
+        <span class="law-photometric">31 with photometric hops</span> and only
+        <span class="law-25d">6 with IBVS or 2.5D hops</span>, on a near-straight path.
+        Bottom: the key images of our plan, rendered by the 3DGS map.
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- Abstract -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Visual servoing reaches a goal view with millimetre precision, but only from nearby. To reach a distant view,
+            a planner must place intermediate <strong>key images</strong>, each reachable from the previous one. We render
+            these key images from a <strong>3D Gaussian Splatting</strong> map of the scene, which also serves as the
+            simulator that validates every hop before it is executed.
+          </p>
+          <p>
+            Our planner bisects the path in SO(3)&times;R&sup3; <strong>only where the simulated servo fails</strong>, so
+            the number of key images adapts to the convergence domain of the controller. We show that validating each hop
+            from its ideal waypoint does not certify execution, since every servo stops within a tolerance of its target,
+            and we validate instead each hop from the pose the previous hop <strong>actually reached</strong>
+            (chained validation).
+          </p>
+          <p>
+            We evaluate the planner with three hop controllers&mdash;photometric, point-based IBVS and 2.5D visual
+            servoing&mdash;on 150 start&ndash;goal pairs and on routes of up to 18&nbsp;m in InteriorGS houses, and
+            compare it with the photometric planners P-A* and Photometric-Planner. A direct hop succeeds on 3&ndash;7&nbsp;%
+            of the pairs; the chained planner on 90&ndash;91&nbsp;% with all three controllers, and geometric hops halve
+            the number of key images and give straight paths.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Method -->
+<section class="section" style="background: #f5f5f5;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 has-text-centered">Method</h2>
+        <div class="content has-text-justified">
+          <h4 class="title is-5">Dichotomic subdivision</h4>
+          <p>
+            We start from the straight path between start and goal, or from the navmesh route for long journeys. On each
+            segment we render the key image at its end and simulate the servo in the map. Where it fails, we insert the
+            midpoint (mean position, slerp of the orientation) and try again. Key images thus accumulate only where the
+            controller needs them.
+          </p>
+          <h4 class="title is-5">Chained (execution-consistent) validation</h4>
+          <p>
+            A servo stops as soon as its error falls below a threshold, a few millimetres to centimetres from its target.
+            The next hop therefore starts from that offset pose, which independent validation never tested. We simulate
+            each hop from the pose the previous hop actually reached, and bisect only when it fails from there: the
+            validated plan is exactly the sequence of hops that execution runs. On 150 pairs, chaining raises success
+            from 82.7&nbsp;% to 90.0&nbsp;% with photometric hops.
+          </p>
+          <h4 class="title is-5">Three hop controllers</h4>
+          <p>
+            <strong class="law-photometric">Photometric</strong> visual servoing regulates the pixel intensities.
+            <strong class="law-ibvs">IBVS</strong> regulates SIFT points matched with the key image
+            (e&nbsp;=&nbsp;s&nbsp;&minus;&nbsp;s*, v&nbsp;=&nbsp;&minus;&lambda;L<sup>+</sup>e).
+            <strong class="law-25d">2.5D</strong> visual servoing regulates an image point, the log depth ratio and the
+            rotation &theta;u. IBVS and 2.5D share one measurement: matches lifted to 3D with the key image's rendered
+            depth and filtered by PnP-RANSAC. Where matching fails, the planner tries a photometric hop on that segment.
+          </p>
+          <figure>
+            <img src="assets/img/route59_bev.png" alt="Route 59 planned with the three hop controllers">
+            <figcaption><strong>Figure:</strong> The same 16.7&nbsp;m route planned with each controller (top view of the
+              map, ceiling removed; dashed: navmesh route, dots: key images). Photometric hops need 47 hops and a path
+              1.61&times; longer; IBVS and 2.5D hops need 10 and follow the route.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Results -->
+<section class="section" id="results">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Results on 150 Pairs in Five InteriorGS Houses</h2>
+    <div class="columns is-mobile is-multiline" style="margin-bottom: 1rem;">
+      <div class="column stat-box"><p class="heading">Direct hop</p><p class="title is-4" style="color:#d7191c;">3&ndash;7&nbsp;%</p></div>
+      <div class="column stat-box"><p class="heading">Chained planner</p><p class="title is-4">90&ndash;91&nbsp;%</p></div>
+      <div class="column stat-box"><p class="heading">Key images</p><p class="title is-4">8 &rarr; 4</p></div>
+      <div class="column stat-box"><p class="heading">Path length</p><p class="title is-4">&times;1.65 &rarr; &times;1.00</p></div>
+    </div>
+    <div class="table-container">
+      <table class="table is-fullwidth is-hoverable results-table">
+        <thead><tr><th>Hop</th><th>Planner</th><th>Success</th><th>Waypoints</th><th>Path length</th><th>Max deviation</th><th>Final error</th><th>Planning</th></tr></thead>
+        <tbody>
+          <tr><td class="law-photometric">photometric</td><td>Direct</td><td>2.7&nbsp;%</td><td>2</td><td>1.20</td><td>22&nbsp;%</td><td>270&nbsp;cm</td><td>0&nbsp;s</td></tr>
+          <tr><td class="law-photometric">photometric</td><td>Uniform, 10 hops</td><td>53.3&nbsp;%</td><td>11</td><td>1.31</td><td>7&nbsp;%</td><td>1.5&nbsp;cm</td><td>0&nbsp;s</td></tr>
+          <tr><td class="law-photometric">photometric</td><td>Dichotomic</td><td>82.7&nbsp;%</td><td>9</td><td>1.63</td><td>11&nbsp;%</td><td>0.8&nbsp;cm</td><td>42&nbsp;s</td></tr>
+          <tr class="ours"><td class="law-photometric">photometric</td><td>Dichotomic + chained (ours)</td><td>90.0&nbsp;%</td><td>8</td><td>1.65</td><td>14&nbsp;%</td><td>0.8&nbsp;cm</td><td>68&nbsp;s</td></tr>
+          <tr class="ours"><td class="law-ibvs">IBVS</td><td>Dichotomic + chained (ours)</td><td>91.3&nbsp;%</td><td>4</td><td>1.00</td><td>1&nbsp;%</td><td>0.2&nbsp;cm</td><td>15&nbsp;s</td></tr>
+          <tr class="ours"><td class="law-25d">2.5D</td><td>Dichotomic + chained (ours)</td><td>90.7&nbsp;%</td><td>4</td><td>1.01</td><td>3&nbsp;%</td><td>0.5&nbsp;cm</td><td>19&nbsp;s</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="has-text-centered" style="font-size: 0.9em; color: #666;">Pairs 1.5&ndash;5&nbsp;m apart. Success: final error
+      below 5&nbsp;cm and 2&deg;. Medians except success; path length and deviation over successes.
+      P-A* and Photometric-Planner on the 150 pairs: in progress.</p>
+  </div>
+</section>
+
+<!-- Navigation scenes -->
+<section class="section" id="scenes" style="background: #f5f5f5;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Navigation Scenes</h2>
+    <div class="content has-text-centered">
+      <p>Long routes through InteriorGS houses, planned and executed with the chained planner:
+        <strong class="law-photometric">photometric</strong>, <strong class="law-ibvs">IBVS</strong> and
+        <strong class="law-25d">2.5D</strong> hops. The 3D view replays the run in your browser: the Gaussian map without
+        its ceiling, the three paths, the key images on their frustums and one camera per controller. Drag to orbit,
+        scroll to zoom.</p>
+    </div>
+    <div class="box">
+      <div class="has-text-centered" style="margin-bottom: 1em;">
+        <span class="tag is-medium is-dark" style="margin-right: 8px;">Scene:</span>
+        <button class="button is-info is-small scene-btn" data-scene="r59">House 0518, route 59</button>
+        <button class="button is-light is-small scene-btn" data-scene="fig8">House 0518, figure-eight</button>
+        <button class="button is-light is-small scene-btn" data-scene="h0036">House 0036</button>
+        <button class="button is-light is-small scene-btn" data-scene="h0126">House 0126</button>
+        <button class="button is-light is-small scene-btn" data-scene="h0420">House 0420</button>
+        <button class="button is-light is-small scene-btn" data-scene="h0505">House 0505</button>
+      </div>
+      <h4 class="title is-5 has-text-centered" id="scene-title"></h4>
+      <p class="has-text-centered" id="scene-caption" style="margin-bottom: 1em;"></p>
+      <div class="columns">
+        <div class="column">
+          <p class="has-text-centered has-text-weight-bold" style="font-size: 0.9em;">Video</p>
+          <video id="scene-video" class="scene-video" controls muted loop playsinline preload="metadata"></video>
+        </div>
+        <div class="column">
+          <p class="has-text-centered has-text-weight-bold" style="font-size: 0.9em;">3D view (viser)</p>
+          <div class="viewer" id="scene-viewer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>Scenes: InteriorGS houses of the Habitat-GS dataset. 3D views: <a href="https://viser.studio">viser</a>.
+            This website template is borrowed from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Scene panel: one video per scene; the 3D view (several MB) loads only on request.
+  var SCENES = {
+    r59:  { title: 'House 0518, route 59 (16.7 m)', video: 'assets/video/house0518_route59_sidebyside.mp4',
+            rec: 'assets/recordings/house0518_route59.viser', size: '10 MB',
+            caption: 'Side by side on the same route: 2.5D hops (10 hops, straight path) and photometric hops (47 hops, path 1.61× longer). IBVS: 10 hops.' },
+    fig8: { title: 'House 0518, figure-eight loop (17.9 m)', video: 'assets/video/house0518_figure8_25d.mp4',
+            rec: 'assets/recordings/house0518_figure8.viser', size: '5 MB',
+            caption: '2.5D hops: 22 hops, 0.5 cm final error. IBVS: 23 hops. Photometric hops: 118 hops and a path 3.6× longer.' },
+    h0036: { title: 'House 0036, route 26', video: 'assets/video/interior_0036_839878_r26_25d.mp4', caption: '2.5D hops.' },
+    h0126: { title: 'House 0126, route 5',  video: 'assets/video/interior_0126_840028_r5_25d.mp4',  caption: '2.5D hops.' },
+    h0420: { title: 'House 0420, route 0',  video: 'assets/video/interior_0420_840007_r0_25d.mp4',  caption: '2.5D hops.' },
+    h0505: { title: 'House 0505, route 14', video: 'assets/video/interior_0505_839970_r14_25d.mp4', caption: '2.5D hops.' }
+  };
+  var viewer = document.getElementById('scene-viewer');
+
+  function show(key) {
+    var s = SCENES[key];
+    document.getElementById('scene-title').textContent = s.title;
+    document.getElementById('scene-caption').textContent = s.caption;
+    document.getElementById('scene-video').src = s.video;
+    viewer.innerHTML = '';
+    var ph = document.createElement('div'); ph.className = 'placeholder';
+    if (s.rec) {
+      var b = document.createElement('button'); b.className = 'button is-info';
+      b.innerHTML = '<span class="icon"><i class="fas fa-cube"></i></span><span>Load the 3D view (' + s.size + ')</span>';
+      b.onclick = function() {
+        var f = document.createElement('iframe');
+        f.src = 'viser/index.html?playbackPath=../' + s.rec; f.title = '3D view'; f.allow = 'fullscreen';
+        viewer.innerHTML = ''; viewer.appendChild(f);
+      };
+      ph.appendChild(b);
+    } else {
+      ph.textContent = '3D view coming soon for this house.';
+    }
+    viewer.appendChild(ph);
+  }
+
+  document.querySelectorAll('.scene-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.scene-btn').forEach(function(b) { b.classList.remove('is-info'); b.classList.add('is-light'); });
+      btn.classList.remove('is-light'); btn.classList.add('is-info');
+      show(btn.dataset.scene);
+    });
+  });
+  show('r59');
+});
+</script>
+
+</body>
+</html>
